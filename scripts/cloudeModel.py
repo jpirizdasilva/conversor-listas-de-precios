@@ -45,28 +45,21 @@ def process_file(file, prompt_template):
 
 def executeCloudeModel(file_data, prompt_template, file_path):
     try:
-        messages = [
-            {
-                "role": "user",
-                "content": [
-                    {
-                        "type": "text",
-                        "text": f"{prompt_template}\n\nDatos:\n{file_data}"
-                    }
-                ]
-            }
-        ]
-
+        message_content = f"{prompt_template}\n\nDatos:\n{file_data}"
+        
         response = client.messages.create(
             model="claude-3-7-sonnet-20250219",
             max_tokens=20000,
-            temperature=0,
             system=SYSTEM_PROMPT,
-            messages=messages
+            messages=[
+                {"role": "user", "content": message_content}
+            ],          
         )
 
-        # Procesar la respuesta para quitar las comillas triples
+        # Obtener respuesta directa sin function calling
         response_text = response.content[0].text
+
+        # Procesar la respuesta para quitar las comillas triples
         response_text = response_text.strip()
         if response_text.startswith('```') and response_text.endswith('```'):
             response_text = response_text[3:-3].strip()
@@ -78,6 +71,9 @@ def executeCloudeModel(file_data, prompt_template, file_path):
         return response_text, output_filename
 
     except Exception as e:
+        # Provide more specific error information
+        error_message = str(e)
+        print(f"Error en la API de Anthropic: {error_message}")
         raise e
 
 
